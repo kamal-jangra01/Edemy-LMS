@@ -54,7 +54,7 @@ export const purchaseCourse = async (req, res) => {
   try {
     const { courseId } = req.body;
     const { origin } = req.headers;
-    const {userId} = req.auth();
+    const { userId } = req.auth();
     const userData = await User.findById(userId);
     const courseData = await Course.findById(courseId);
 
@@ -62,17 +62,16 @@ export const purchaseCourse = async (req, res) => {
       return res.json({ success: false, message: " user or course not found" });
     }
 
-    const purchaseData = {
+    const amount = Math.floor(
+      courseData.coursePrice -
+        (courseData.discount * courseData.coursePrice) / 100,
+    );
+
+    const newPurchase = await Purchase.create({
       courseId: courseData._id,
-      userId: userId,
-      amount: (
-        courseData.coursePrice -
-        (courseData.discount * courseData.coursePrice) / 100
-      ).toFixed(2),
-    };
-
-    const newPurchase = await Purchase.create(purchaseData);
-
+      userId,
+      amount,
+    });
     //stripe gateway
     const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
     const currency = process.env.CURRENCY.toLowerCase();
