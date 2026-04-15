@@ -12,6 +12,7 @@
   "dependencies": {
     "@clerk/react": "^6.1.4",
     "autoprefixer": "^10.4.27",
+    "axios": "^1.15.0",
     "humanize-duration": "^3.33.2",
     "postcss": "^8.5.8",
     "quill": "^2.0.3",
@@ -20,6 +21,7 @@
     "react-dom": "^19.2.4",
     "react-router-dom": "^7.14.0",
     "react-simple-star-rating": "^5.1.7",
+    "react-toastify": "^11.0.5",
     "react-youtube": "^10.1.0",
     "uniqid": "^5.4.0"
   },

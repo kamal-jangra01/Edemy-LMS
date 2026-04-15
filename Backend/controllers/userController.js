@@ -2,6 +2,7 @@ import User from "../models/User.js";
 import Course from "../models/Course.js";
 import { Purchase } from "../models/Purchase.js";
 import Stripe from "stripe";
+import { CourseProgress } from "../models/CourseProgress.js";
 
 export const getUserData = async (req, res) => {
   try {
@@ -102,6 +103,156 @@ export const purchaseCourse = async (req, res) => {
 
     res.json({ success: true, session_url: session.url });
   } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
+
+//update user course progress\
+
+export const updateUserCourseProgress = async (req, res) => {
+  try {
+    const { userId } = req.auth(); // ✅ FIX
+    const { courseId, lectureId } = req.body;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    let progressData = await CourseProgress.findOne({ userId, courseId });
+
+    if (progressData) {
+      if (progressData.lectureCompleted.includes(lectureId)) {
+        return res.json({
+          success: true,
+          message: "Lecture already completed",
+        });
+      }
+
+      progressData.lectureCompleted.push(lectureId);
+      await progressData.save(); // ✅ FIX
+
+      return res.json({
+        success: true,
+        message: "Course progress updated",
+      });
+    }
+
+    // ✅ new progress create
+    await CourseProgress.create({
+      userId,
+      courseId,
+      lectureCompleted: [lectureId],
+    });
+
+    res.json({
+      success: true,
+      message: "Course progress created",
+    });
+  } catch (error) {
+    console.log("PROGRESS ERROR:", error.message);
+    res.json({ success: false, message: error.message });
+  }
+};
+
+// get user course progress
+export const getUserCourseProgress = async (req, res) => {
+  try {
+    const { userId } = req.auth(); // ✅ FIX
+    const { courseId } = req.body; // ✅ only courseId
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    const progressData = await CourseProgress.findOne({
+      userId,
+      courseId,
+    });
+
+    // agar progress exist nahi karta
+    if (!progressData) {
+      return res.json({
+        success: true,
+        progressData: {
+          lectureCompleted: [],
+        },
+      });
+    }
+
+    res.json({
+      success: true,
+      progressData,
+    });
+  } catch (error) {
+    console.log("GET PROGRESS ERROR:", error.message);
+    res.json({ success: false, message: error.message });
+  }
+};
+
+//Add user Ratings to course
+export const addUserRating = async (req, res) => {
+  try {
+    const { userId } = req.auth(); // ✅ FIX
+    const { courseId, rating } = req.body;
+
+    // ✅ validation
+    if (!courseId || !rating || rating < 1 || rating > 5) {
+      return res.json({
+        success: false,
+        message: "Invalid details/rating",
+      });
+    }
+
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.json({
+        success: false,
+        message: "Course not found",
+      });
+    }
+
+    const user = await User.findById(userId);
+
+    // ✅ FIX ObjectId compare
+    const isEnrolled = user.enrolledCourses.some(
+      (id) => id.toString() === courseId,
+    );
+
+    if (!user || !isEnrolled) {
+      return res.json({
+        success: false,
+        message: "You are not enrolled in this course",
+      });
+    }
+
+    // ✅ check existing rating
+    const existingRatingIndex = course.courseRatings.findIndex(
+      (r) => r.userId === userId,
+    );
+
+    if (existingRatingIndex > -1) {
+      course.courseRatings[existingRatingIndex].rating = Number(rating);
+    } else {
+      course.courseRatings.push({
+        userId,
+        rating: Number(rating),
+      });
+    }
+
+    await course.save();
+
+    res.json({
+      success: true,
+      message: "Rating added",
+    });
+  } catch (error) {
+    console.log("RATING ERROR:", error.message);
     res.json({ success: false, message: error.message });
   }
 };

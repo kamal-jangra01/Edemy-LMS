@@ -42,7 +42,9 @@ export const addCourse = async (req, res) => {
 
     const newCourse = await Course.create(parsedCourseData);
 
-    const imageUpload = await cloudinary.uploader.upload(imageFile.path);
+    const imageUpload = await cloudinary.uploader.upload(imageFile.path, {
+      folder: `${process.env.CLOUDINARY_FOLDER}`,
+    });
 
     newCourse.courseThumbnail = imageUpload.secure_url;
 
