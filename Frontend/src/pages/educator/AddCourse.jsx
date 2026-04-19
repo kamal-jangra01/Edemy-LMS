@@ -204,7 +204,7 @@ const AddCourse = () => {
           <p>Discount %</p>
           <input
             type="number"
-            onChange={(e) => e.target.value}
+            onChange={(e) => setDiscount(e.target.value)}
             value={discount}
             placeholder="0"
             min={0}
@@ -230,7 +230,7 @@ const AddCourse = () => {
                   />
                   <span className="font-semibold ">
                     {chapterIndex + 1}
-                    {chapter.chapterTitle}
+                    {chapter.chaptertitle}
                   </span>
                 </div>
                 <span className="text-gray-500">

@@ -146,7 +146,7 @@ const Player = () => {
                         alt="arrow icon"
                       />
                       <p className="font-medium md:text-base text-sm">
-                        {chapter.chapterTitle}
+                        {chapter.chaptertitle}
                       </p>
                     </div>
                     <p className="text-sm md:text-default">

@@ -44,22 +44,26 @@ const CourseDetails = () => {
 
   const enrollCourse = async () => {
     try {
-      if (!userData){
-        return toast.warn('Login to Enroll')
+      if (!userData) {
+        return toast.warn("Login to Enroll");
       }
-      if(isAlreadyEnrolled){
-        return toast.warn('Already Enrolled')
+      if (isAlreadyEnrolled) {
+        return toast.warn("Already Enrolled");
       }
       const token = await getToken();
-      const {data} = await axios.post(backendUrl + '/api/user/purchase', {courseId: courseData._id}, {headers: {Authorization: `Bearer ${token}`}})
-      if(data.success){
-        const {session_url} = data
-        window.location.replace(session_url)
-      }else{
-        toast.error(data.message)
+      const { data } = await axios.post(
+        backendUrl + "/api/user/purchase",
+        { courseId: courseData._id },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      if (data.success) {
+        const { session_url } = data;
+        window.location.replace(session_url);
+      } else {
+        toast.error(data.message);
       }
     } catch (error) {
-      toast.error(data.message)
+      toast.error(data.message);
     }
   };
 
@@ -68,13 +72,20 @@ const CourseDetails = () => {
   }, []);
 
   useEffect(() => {
-    if(userData && courseData){
-    setIsAlreadyEnrolled(userData.enrolledCourses.includes(courseData._id))
+    if (userData && courseData) {
+      setIsAlreadyEnrolled(userData.enrolledCourses.includes(courseData._id));
     }
   }, [userData, courseData]);
 
   const toggleSection = (index) => {
     setOpenSections((prev) => ({ ...prev, [index]: !prev[index] }));
+  };
+
+  const getYoutubeId = (url) => {
+    const regExp =
+      /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([^&\n?#]+)/;
+    const match = url.match(regExp);
+    return match ? match[1] : null;
   };
 
   return courseData ? (
@@ -87,12 +98,23 @@ const CourseDetails = () => {
           <h1 className="md:text-course-details-heading-large text-course-details-heading-small font-semibold text-gray-800">
             {courseData.courseTitle}
           </h1>
-          <p
-            className="pt-4 md:text-base text-sm"
-            dangerouslySetInnerHTML={{
-              __html: courseData.courseDescription.slice(0, 200),
-            }}
-          ></p>
+          <p className="pt-4 md:text-base text-sm text-gray-700">
+            {(() => {
+              const doc = new DOMParser().parseFromString(
+                courseData.courseDescription,
+                "text/html",
+              );
+              // saare <p> tags le lo
+              const paragraphs = doc.querySelectorAll("p");
+              // pehla paragraph (heading) hata do
+              const descriptionText = Array.from(paragraphs)
+                .slice() // skip first
+                .map((p) => p.textContent)
+                .join(" ");
+
+              return descriptionText.slice(0, 200) + "...";
+            })()}
+          </p>
 
           {/*revie and rating */}
           <div className="flex items-center space-x-2 pt-3 pb-1 text-sm">
@@ -122,9 +144,11 @@ const CourseDetails = () => {
             </p>
           </div>
           <p className="text-sm">
-            Course by <span className="text-blue-600 underline">{courseData.educator.name}</span>
+            Course by{" "}
+            <span className="text-blue-600 underline">
+              {courseData.educator.name}
+            </span>
           </p>
-
           <div className="pt-8 text-gray-800">
             <h2 className="text-xl font-semibold">Course Structure</h2>
 
@@ -145,7 +169,7 @@ const CourseDetails = () => {
                         alt="arrow icon"
                       />
                       <p className="font-medium md:text-base text-sm">
-                        {chapter.chapterTitle}
+                        {chapter.chaptertitle}
                       </p>
                     </div>
                     <p className="text-sm md:text-default">
@@ -172,9 +196,7 @@ const CourseDetails = () => {
                                 <p
                                   onClick={() =>
                                     setPlayerData({
-                                      videoId: lecture.lectureUrl
-                                        .split("/")
-                                        .pop(),
+                                      videoId: getYoutubeId(lecture.lectureUrl),
                                     })
                                   }
                                   className="text-blue-500 cursor-pointer"
@@ -198,7 +220,13 @@ const CourseDetails = () => {
               ))}
             </div>
           </div>
-          <div className="py-20 text-sm md:text-default">
+          <div
+            className="text-gray-700 
+  [&_h1]:text-2xl 
+  [&_h1]:font-semibold 
+  [&_h1]:leading-snug 
+  [&_h1]:mb-4"
+          >
             <h3 className="text-xl font-semibold text-gray-800">
               Course Description
             </h3>
@@ -269,7 +297,10 @@ const CourseDetails = () => {
               </div>
             </div>
 
-            <button onClick={enrollCourse} className="md:mt-6 mt-4 w-full py-3 rounded bg-blue-600 text-white font-medium">
+            <button
+              onClick={enrollCourse}
+              className="md:mt-6 mt-4 w-full py-3 rounded bg-blue-600 text-white font-medium"
+            >
               {isAlreadyEnrolled ? "Already Enrolled" : "Enroll Now"}
             </button>
 
